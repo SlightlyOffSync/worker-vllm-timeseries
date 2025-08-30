@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu22.04 
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
 
 RUN apt-get update -y \
     && apt-get install -y python3-pip git
@@ -11,10 +11,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --upgrade pip && \
     python3 -m pip install --upgrade -r /requirements.txt
 
-# Install vLLM (switching back to pip installs since issues that required building fork are fixed and space optimization is not as important since caching) and FlashInfer 
-# Install vLLM (from the timeseries branch) and FlashInfer 
-RUN python3 -m pip install "git+https://github.com/xiez22/vllm.git@timeseries" && \
+# --- START OF MODIFIED BLOCK ---
+# Clone the vLLM fork first, then install it with the precompiled flag.
+# This ensures build dependencies are handled correctly.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    git clone --branch timeseries https://github.com/xiez22/vllm.git /vllm-workspace && \
+    VLLM_USE_PRECOMPILED=1 python3 -m pip install /vllm-workspace && \
     python3 -m pip install flashinfer -i https://flashinfer.ai/whl/cu121/torch2.3
+# --- END OF MODIFIED BLOCK ---
 
 # Setup for Option 2: Building the Image with the Model included
 ARG MODEL_NAME=""
@@ -33,8 +37,9 @@ ENV MODEL_NAME=$MODEL_NAME \
     HF_DATASETS_CACHE="${BASE_PATH}/huggingface-cache/datasets" \
     HUGGINGFACE_HUB_CACHE="${BASE_PATH}/huggingface-cache/hub" \
     HF_HOME="${BASE_PATH}/huggingface-cache/hub" \
-    HF_HUB_ENABLE_HF_TRANSFER=0 
+    HF_HUB_ENABLE_HF_TRANSFER=0
 
+# This PYTHONPATH now correctly points to the cloned repository
 ENV PYTHONPATH="/:/vllm-workspace"
 
 
