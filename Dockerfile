@@ -1,3 +1,5 @@
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
+
 # Set non-interactive frontend to avoid prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
