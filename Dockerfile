@@ -1,7 +1,25 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu22.04
+# Set non-interactive frontend to avoid prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update -y \
-    && apt-get install -y python3-pip git
+RUN apt-get update -y && \
+    # Install prerequisites for adding new repositories and for Python
+    apt-get install -y software-properties-common && \
+    # Add the deadsnakes PPA for newer Python versions
+    add-apt-repository ppa:deadsnakes/ppa && \
+    # Install Python 3.11 and its development headers
+    apt-get install -y python3.11 python3.11-dev python3.11-distutils git && \
+    # Install pip for Python 3.11
+    apt-get install -y python3-pip && \
+    # Clean up apt cache
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Use update-alternatives to make python3.11 the default python3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2
+
+# Verify the new default version
+RUN python3 --version
 
 RUN ldconfig /usr/local/cuda-12.1/compat/
 
