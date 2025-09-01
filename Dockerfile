@@ -36,7 +36,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # This ensures build dependencies are handled correctly.
 RUN --mount=type=cache,target=/root/.cache/pip \
     git clone --branch timeseries https://github.com/xiez22/vllm.git /vllm-workspace && \
-    VLLM_USE_PRECOMPILED=1 python3 -m pip install /vllm-workspace && \
+    python3 -m pip install /vllm-workspace && \
     python3 -m pip install flashinfer -i https://flashinfer.ai/whl/cu121/torch2.3
 # --- END OF MODIFIED BLOCK ---
 
